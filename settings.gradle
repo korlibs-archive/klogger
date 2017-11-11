@@ -1,0 +1,15 @@
+rootProject.name = 'klogger-root'
+
+include(
+		'klogger-common',
+		'klogger',
+		'klogger-js',
+)
+
+def register(String base) {
+	findProject(":$base-common")?.projectDir = file("$base/common")
+	findProject(":$base")?.projectDir = file("$base/jvm")
+	findProject(":$base-js")?.projectDir = file("$base/js")
+}
+
+register('klogger')
