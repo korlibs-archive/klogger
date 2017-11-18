@@ -7,6 +7,25 @@ object LoggerManager {
 	fun getLogger(name: String) = loggers.getOrPut(name) { Logger(name, true) }
 
 	fun setLevel(name: String, level: LogLevel) = getLogger(name).apply { this.level = level }
+
+	fun setOutput(name: String, output: LoggerOutput) = getLogger(name).apply { this.output = output }
+
+	var defaultOutput: LoggerOutput = ConsoleLoggerOutput
+}
+
+object ConsoleLoggerOutput : LoggerOutput {
+	override fun output(logger: Logger, level: LogLevel, msg: String) {
+		val line = "[${logger.name}]: $msg"
+		when (level) {
+			LogLevel.ERROR -> KloggerConsole.error(line)
+			else -> KloggerConsole.log(line)
+		}
+	}
+
+}
+
+interface LoggerOutput {
+	fun output(logger: Logger, level: LogLevel, msg: String)
 }
 
 enum class LogLevel(val index: Int) { NONE(0), FATAL(1), ERROR(2), WARN(3), INFO(4), DEBUG(5), TRACE(6) }
@@ -21,21 +40,14 @@ class Logger internal constructor(val name: String, val dummy: Boolean) {
 	}
 
 	var level: LogLevel? = null
+	var output: LoggerOutput? = null
 
 	val processedLevel: LogLevel get() = level ?: LoggerManager.defaultLevel ?: LogLevel.WARN
-
-	@PublishedApi
-	internal fun actualLog(level: LogLevel, msg: String) {
-		val line = "[$name]: $msg"
-		when (level) {
-			LogLevel.ERROR -> KloggerConsole.error(line)
-			else -> KloggerConsole.log(line)
-		}
-	}
+	val processedOutput: LoggerOutput get() = output ?: LoggerManager.defaultOutput
 
 	inline fun log(level: LogLevel, msg: () -> String) {
 		if (isEnabled(level)) {
-			actualLog(level, msg())
+			processedOutput.output(this, level, msg())
 		}
 	}
 
@@ -48,14 +60,19 @@ class Logger internal constructor(val name: String, val dummy: Boolean) {
 
 	@Deprecated("potential performance problem", ReplaceWith("fatal { msg }"))
 	fun fatal(msg: String) = fatal { msg }
+
 	@Deprecated("potential performance problem", ReplaceWith("error { msg }"))
 	fun error(msg: String) = error { msg }
+
 	@Deprecated("potential performance problem", ReplaceWith("warn { msg }"))
 	fun warn(msg: String) = warn { msg }
+
 	@Deprecated("potential performance problem", ReplaceWith("info { msg }"))
 	fun info(msg: String) = info { msg }
+
 	@Deprecated("potential performance problem", ReplaceWith("debug { msg }"))
 	fun debug(msg: String) = debug { msg }
+
 	@Deprecated("potential performance problem", ReplaceWith("trace { msg }"))
 	fun trace(msg: String) = trace { msg }
 
