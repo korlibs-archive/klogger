@@ -9,7 +9,7 @@ object LoggerManager {
 	fun setLevel(name: String, level: LogLevel) = getLogger(name).apply { this.level = level }
 }
 
-enum class LogLevel(val index: Int) { NONE(0), FATAL(1), ERROR(2), WARN(3), INFO(4), TRACE(5) }
+enum class LogLevel(val index: Int) { NONE(0), FATAL(1), ERROR(2), WARN(3), INFO(4), DEBUG(5), TRACE(6) }
 
 class Logger internal constructor(val name: String, val dummy: Boolean) {
 	companion object {
@@ -43,6 +43,7 @@ class Logger internal constructor(val name: String, val dummy: Boolean) {
 	inline fun error(msg: () -> String) = log(LogLevel.ERROR, msg)
 	inline fun warn(msg: () -> String) = log(LogLevel.WARN, msg)
 	inline fun info(msg: () -> String) = log(LogLevel.INFO, msg)
+	inline fun debug(msg: () -> String) = log(LogLevel.DEBUG, msg)
 	inline fun trace(msg: () -> String) = log(LogLevel.TRACE, msg)
 
 	@Deprecated("potential performance problem", ReplaceWith("fatal { msg }"))
@@ -53,6 +54,8 @@ class Logger internal constructor(val name: String, val dummy: Boolean) {
 	fun warn(msg: String) = warn { msg }
 	@Deprecated("potential performance problem", ReplaceWith("info { msg }"))
 	fun info(msg: String) = info { msg }
+	@Deprecated("potential performance problem", ReplaceWith("debug { msg }"))
+	fun debug(msg: String) = debug { msg }
 	@Deprecated("potential performance problem", ReplaceWith("trace { msg }"))
 	fun trace(msg: String) = trace { msg }
 }
