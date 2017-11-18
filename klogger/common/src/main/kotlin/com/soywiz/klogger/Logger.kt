@@ -39,15 +39,20 @@ class Logger internal constructor(val name: String, val dummy: Boolean) {
 		}
 	}
 
-	fun fatal(msg: String) = log(LogLevel.FATAL) { msg }
-	fun error(msg: String) = log(LogLevel.ERROR) { msg }
-	fun warn(msg: String) = log(LogLevel.WARN) { msg }
-	fun info(msg: String) = log(LogLevel.INFO) { msg }
-	fun trace(msg: String) = log(LogLevel.TRACE) { msg }
-
 	inline fun fatal(msg: () -> String) = log(LogLevel.FATAL, msg)
 	inline fun error(msg: () -> String) = log(LogLevel.ERROR, msg)
 	inline fun warn(msg: () -> String) = log(LogLevel.WARN, msg)
 	inline fun info(msg: () -> String) = log(LogLevel.INFO, msg)
 	inline fun trace(msg: () -> String) = log(LogLevel.TRACE, msg)
+
+	@Deprecated("potential performance problem", ReplaceWith("fatal { msg }"))
+	fun fatal(msg: String) = fatal { msg }
+	@Deprecated("potential performance problem", ReplaceWith("error { msg }"))
+	fun error(msg: String) = error { msg }
+	@Deprecated("potential performance problem", ReplaceWith("warn { msg }"))
+	fun warn(msg: String) = warn { msg }
+	@Deprecated("potential performance problem", ReplaceWith("info { msg }"))
+	fun info(msg: String) = info { msg }
+	@Deprecated("potential performance problem", ReplaceWith("trace { msg }"))
+	fun trace(msg: String) = trace { msg }
 }
