@@ -45,9 +45,15 @@ class Logger internal constructor(val name: String, val dummy: Boolean) {
 	val processedLevel: LogLevel get() = level ?: LoggerManager.defaultLevel ?: LogLevel.WARN
 	val processedOutput: LoggerOutput get() = output ?: LoggerManager.defaultOutput
 
+	@PublishedApi
+	//@Deprecated("Keep for compatibility reasons since this was called from an inline", level = DeprecationLevel.HIDDEN)
+	internal fun actualLog(level: LogLevel, msg: String) {
+		processedOutput.output(this, level, msg)
+	}
+
 	inline fun log(level: LogLevel, msg: () -> String) {
 		if (isEnabled(level)) {
-			processedOutput.output(this, level, msg())
+			actualLog(level, msg())
 		}
 	}
 
