@@ -34,7 +34,7 @@ class Logger internal constructor(val name: String, val dummy: Boolean) {
 	}
 
 	inline fun log(level: LogLevel, msg: () -> String) {
-		if (level.index <= processedLevel.index) {
+		if (isEnabled(level)) {
 			actualLog(level, msg())
 		}
 	}
@@ -58,4 +58,13 @@ class Logger internal constructor(val name: String, val dummy: Boolean) {
 	fun debug(msg: String) = debug { msg }
 	@Deprecated("potential performance problem", ReplaceWith("trace { msg }"))
 	fun trace(msg: String) = trace { msg }
+
+	inline fun isEnabled(level: LogLevel) = level.index <= processedLevel.index
+
+	inline val isFatalEnabled get() = isEnabled(LogLevel.FATAL)
+	inline val isErrorEnabled get() = isEnabled(LogLevel.ERROR)
+	inline val isWarnEnabled get() = isEnabled(LogLevel.WARN)
+	inline val isInfoEnabled get() = isEnabled(LogLevel.INFO)
+	inline val isDebugEnabled get() = isEnabled(LogLevel.DEBUG)
+	inline val isTraceEnabled get() = isEnabled(LogLevel.TRACE)
 }
