@@ -204,7 +204,4 @@ allprojects {
 
 	task deploy(dependsOn: ['install', 'uploadArchives']) {
 	}
-
-
 }
-
