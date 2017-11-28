@@ -82,7 +82,7 @@ class Logger internal constructor(val name: String, val dummy: Boolean) {
 	@Deprecated("potential performance problem", ReplaceWith("trace { msg }"))
 	fun trace(msg: String) = trace { msg }
 
-	inline fun isEnabled(level: LogLevel) = level.index <= processedLevel.index
+	fun isEnabled(level: LogLevel) = level.index <= processedLevel.index
 
 	inline val isFatalEnabled get() = isEnabled(LogLevel.FATAL)
 	inline val isErrorEnabled get() = isEnabled(LogLevel.ERROR)
