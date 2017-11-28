@@ -22,7 +22,7 @@ allprojects {
 	}
 
 	group 'com.soywiz'
-	version '0.3.0'
+	version '0.3.1-SNAPSHOT'
 
 	if (project == rootProject) {
 		new File(rootProject.rootDir, "klogger/common/src/main/kotlin/com/soywiz/klogger/KloggerVersion.kt").write(
