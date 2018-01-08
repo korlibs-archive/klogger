@@ -1,49 +1,19 @@
 package com.soywiz.klogger
 
-object LoggerManager {
-	val loggers = LinkedHashMap<String, Logger>()
-	var defaultLevel: LogLevel? = null
-
-	fun getLogger(name: String) = loggers.getOrPut(name) { Logger(name, true) }
-
-	fun setLevel(name: String, level: LogLevel) = getLogger(name).apply { this.level = level }
-
-	fun setOutput(name: String, output: LoggerOutput) = getLogger(name).apply { this.output = output }
-
-	var defaultOutput: LoggerOutput = ConsoleLoggerOutput
-}
-
-object ConsoleLoggerOutput : LoggerOutput {
-	override fun output(logger: Logger, level: LogLevel, msg: String) {
-		val line = "[${logger.name}]: $msg"
-		when (level) {
-			LogLevel.ERROR -> KloggerConsole.error(line)
-			else -> KloggerConsole.log(line)
-		}
-	}
-
-}
-
-interface LoggerOutput {
-	fun output(logger: Logger, level: LogLevel, msg: String)
-}
-
-enum class LogLevel(val index: Int) { NONE(0), FATAL(1), ERROR(2), WARN(3), INFO(4), DEBUG(5), TRACE(6) }
-
 class Logger internal constructor(val name: String, val dummy: Boolean) {
 	companion object {
-		operator fun invoke(name: String) = LoggerManager.getLogger(name)
+		operator fun invoke(name: String) = Loggers.getLogger(name)
 	}
 
 	init {
-		LoggerManager.loggers[name] = this
+		Loggers.loggers[name] = this
 	}
 
 	var level: LogLevel? = null
-	var output: LoggerOutput? = null
+	var output: LogOutput? = null
 
-	val processedLevel: LogLevel get() = level ?: LoggerManager.defaultLevel ?: LogLevel.WARN
-	val processedOutput: LoggerOutput get() = output ?: LoggerManager.defaultOutput
+	private val processedLevel: LogLevel get() = level ?: Loggers.defaultLevel ?: LogLevel.WARN
+	private val processedOutput: LogOutput get() = output ?: Loggers.defaultOutput
 
 	@PublishedApi
 	//@Deprecated("Keep for compatibility reasons since this was called from an inline", level = DeprecationLevel.HIDDEN)
@@ -64,22 +34,22 @@ class Logger internal constructor(val name: String, val dummy: Boolean) {
 	inline fun debug(msg: () -> String) = log(LogLevel.DEBUG, msg)
 	inline fun trace(msg: () -> String) = log(LogLevel.TRACE, msg)
 
-	@Deprecated("potential performance problem", ReplaceWith("fatal { msg }"))
+	@Deprecated("Potential performance problem. Use inline to lazily compute message.", ReplaceWith("fatal { msg }"))
 	fun fatal(msg: String) = fatal { msg }
 
-	@Deprecated("potential performance problem", ReplaceWith("error { msg }"))
+	@Deprecated("potential performance problem. Use inline to lazily compute message.", ReplaceWith("error { msg }"))
 	fun error(msg: String) = error { msg }
 
-	@Deprecated("potential performance problem", ReplaceWith("warn { msg }"))
+	@Deprecated("potential performance problem. Use inline to lazily compute message.", ReplaceWith("warn { msg }"))
 	fun warn(msg: String) = warn { msg }
 
-	@Deprecated("potential performance problem", ReplaceWith("info { msg }"))
+	@Deprecated("potential performance problem. Use inline to lazily compute message.", ReplaceWith("info { msg }"))
 	fun info(msg: String) = info { msg }
 
-	@Deprecated("potential performance problem", ReplaceWith("debug { msg }"))
+	@Deprecated("potential performance problem. Use inline to lazily compute message.", ReplaceWith("debug { msg }"))
 	fun debug(msg: String) = debug { msg }
 
-	@Deprecated("potential performance problem", ReplaceWith("trace { msg }"))
+	@Deprecated("potential performance problem. Use inline to lazily compute message.", ReplaceWith("trace { msg }"))
 	fun trace(msg: String) = trace { msg }
 
 	fun isEnabled(level: LogLevel) = level.index <= processedLevel.index
