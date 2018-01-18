@@ -1,3 +1,3 @@
 package com.soywiz.klogger
 
-internal const val KLOGGER_VERSION = "0.4.1-SNAPSHOT"
+internal const val KLOGGER_VERSION = "0.5.0-SNAPSHOT"
