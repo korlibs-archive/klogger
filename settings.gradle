@@ -1,15 +1,20 @@
-rootProject.name = 'klogger-root'
+pluginManagement {
+	resolutionStrategy {
+		eachPlugin {
+			if (requested.id.id == "kotlin-multiplatform") {
+				useModule("org.jetbrains.kotlin:kotlin-gradle-plugin:${requested.version}")
+			}
+		}
+	}
 
-include(
-		'klogger-common',
-		'klogger',
-		'klogger-js',
-)
-
-def register(String base) {
-	findProject(":$base-common")?.projectDir = file("$base/common")
-	findProject(":$base")?.projectDir = file("$base/jvm")
-	findProject(":$base-js")?.projectDir = file("$base/js")
+	repositories {
+		mavenLocal()
+		maven { url 'http://dl.bintray.com/kotlin/kotlin-eap' }
+		mavenCentral()
+		maven { url 'https://plugins.gradle.org/m2/' }
+	}
 }
 
-register('klogger')
+rootProject.name = 'klogger'
+
+enableFeaturePreview('GRADLE_METADATA')
