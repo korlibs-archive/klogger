@@ -115,3 +115,7 @@ class Logger private constructor(val name: String, val dummy: Boolean) {
     internal fun actualLog(level: Level, msg: Any?) = run { output.output(this, level, msg) }
 }
 
+/** Sets the [Logger.level] */
+fun Logger.setLevel(level: Logger.Level): Logger = this.apply { this.level = level }
+/** Sets the [Logger.output] */
+fun Logger.setOutput(output: Logger.Output): Logger = this.apply { this.output = output }
