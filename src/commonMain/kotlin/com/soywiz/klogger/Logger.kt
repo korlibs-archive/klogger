@@ -1,38 +1,12 @@
 package com.soywiz.klogger
 
+import com.soywiz.klogger.internal.*
 import kotlinx.atomicfu.*
-import kotlin.reflect.*
 
-class Logger internal constructor(val name: String, val dummy: Boolean) {
-    companion object {
-        private var loggers: Map<String, Logger> by atomic(mapOf())
-        var defaultLevel: Level? by atomic<Level?>(null)
-        var defaultOutput: Output by atomic<Output>(ConsoleLogOutput)
-        fun getLogger(name: String): Logger = loggers[name] ?: Logger(name, true)
-        fun setLevel(name: String, level: Level) = getLogger(name).apply { this.level = level }
-        fun setOutput(name: String, output: Output) = getLogger(name).apply { this.output = output }
-        operator fun invoke(name: String) = Logger.getLogger(name)
-    }
-
-    enum class Level(val index: Int) {
-        NONE(0), FATAL(1), ERROR(2),
-        WARN(3), INFO(4), DEBUG(5), TRACE(6)
-    }
-
-    interface Output {
-        fun output(logger: Logger, level: Logger.Level, msg: Any?)
-    }
-
-    object ConsoleLogOutput : Logger.Output {
-        override fun output(logger: Logger, level: Logger.Level, msg: Any?) {
-            //val line = "[${logger.name}]: $msg"
-            when (level) {
-                Logger.Level.ERROR -> Console.error(logger.name, msg)
-                else -> Console.log(logger.name, msg)
-            }
-        }
-    }
-
+/**
+ * Utility to log messages.
+ */
+class Logger private constructor(val name: String, val dummy: Boolean) {
     init {
         // @TODO: kotlin-native this produces a freeze error
         if (!isNative) {
@@ -40,90 +14,104 @@ class Logger internal constructor(val name: String, val dummy: Boolean) {
         }
     }
 
-    var level: Level? by atomic<Level?>(null)
-    var output: Output? by atomic<Output?>(null)
+    private var _level: Level? by atomic<Level?>(null)
+    private var _output: Output? by atomic<Output?>(null)
 
-    private val processedLevel: Level get() = level ?: Logger.defaultLevel ?: Level.WARN
-    private val processedOutput: Output get() = output ?: Logger.defaultOutput
+    /** [Level] of this [Logger]. If not set, it will use the [Logger.defaultLevel] */
+    var level: Level
+        set(value) = run { _level = value }
+        get() = _level ?: Logger.defaultLevel ?: Level.WARN
 
-    @PublishedApi
-    //@Deprecated("Keep for compatibility reasons since this was called from an inline", level = DeprecationLevel.HIDDEN)
-    internal fun actualLog(level: Level, msg: Any?) {
-        processedOutput.output(this, level, msg)
+    /** [Output] of this [Logger]. If not set, it will use the [Logger.defaultOutput] */
+    var output: Output
+        set(value) = run { _output = value }
+        get() = _output ?: Logger.defaultOutput
+
+    /** Check if the [level] is set for this [Logger] */
+    val isLocalLevelSet: Boolean get() = _level != null
+
+    /** Check if the [output] is set for this [Logger] */
+    val isLocalOutputSet: Boolean get() = _output != null
+
+    companion object {
+        private var loggers: Map<String, Logger> by atomic(mapOf())
+
+        /** The default [Level] used for all [Logger] that doesn't have its [Logger.level] set */
+        var defaultLevel: Level? by atomic<Level?>(null)
+        /** The default [Output] used for all [Logger] that doesn't have its [Logger.output] set */
+        var defaultOutput: Output by atomic<Output>(ConsoleLogOutput)
+
+        /** Gets a [Logger] from its [name] */
+        operator fun invoke(name: String) = loggers[name] ?: Logger(name, true)
     }
 
-    inline fun log(level: Level, msg: () -> Any?) {
-        if (isEnabled(level)) {
-            actualLog(level, msg())
+    /** Logging [Level] */
+    enum class Level(val index: Int) {
+        NONE(0), FATAL(1), ERROR(2),
+        WARN(3), INFO(4), DEBUG(5), TRACE(6)
+    }
+
+    /** Logging [Output] to handle logs */
+    interface Output {
+        fun output(logger: Logger, level: Logger.Level, msg: Any?)
+    }
+
+    /** Default [Output] to emit logs over the [Console] */
+    object ConsoleLogOutput : Logger.Output {
+        override fun output(logger: Logger, level: Logger.Level, msg: Any?) {
+            when (level) {
+                Logger.Level.ERROR -> Console.error(logger.name, msg)
+                else -> Console.log(logger.name, msg)
+            }
         }
     }
 
-    //inline fun logErrorInline(level: LogLevel, msg: () -> Any?) {
-    //	if (isEnabled(level)) {
-    //		KloggerConsole.error(name, msg())
-    //		//actualLog(level, msg())
-    //	}
-    //}
-    //
-    //inline fun logInline(level: LogLevel, msg: () -> Any?) {
-    //	if (isEnabled(level)) {
-    //		KloggerConsole.log(name, msg())
-    //		//actualLog(level, msg())
-    //	}
-    //}
-    //
-    //inline fun fatal(msg: () -> Any?) = logErrorInline(LogLevel.FATAL, msg)
-    //inline fun error(msg: () -> Any?) = logErrorInline(LogLevel.ERROR, msg)
-    //inline fun warn(msg: () -> Any?) = logInline(LogLevel.WARN, msg)
-    //inline fun info(msg: () -> Any?) = logInline(LogLevel.INFO, msg)
-    //inline fun debug(msg: () -> Any?) = logInline(LogLevel.DEBUG, msg)
-    //inline fun trace(msg: () -> Any?) = logInline(LogLevel.TRACE, msg)
+    /** Returns if this [Logger] has at least level [Level] */
+    fun isEnabled(level: Level) = level.index <= this.level.index
 
+    /** Returns if this [Logger] has at least level [Level.FATAL] */
+    inline val isFatalEnabled get() = isEnabled(Level.FATAL)
+    /** Returns if this [Logger] has at least level [Level.ERROR] */
+    inline val isErrorEnabled get() = isEnabled(Level.ERROR)
+    /** Returns if this [Logger] has at least level [Level.WARN] */
+    inline val isWarnEnabled get() = isEnabled(Level.WARN)
+    /** Returns if this [Logger] has at least level [Level.INFO] */
+    inline val isInfoEnabled get() = isEnabled(Level.INFO)
+    /** Returns if this [Logger] has at least level [Level.DEBUG] */
+    inline val isDebugEnabled get() = isEnabled(Level.DEBUG)
+    /** Returns if this [Logger] has at least level [Level.TRACE] */
+    inline val isTraceEnabled get() = isEnabled(Level.TRACE)
+
+    /** Traces the lazily executed [msg] if the [Logger.level] is at least [level] */
+    inline fun log(level: Level, msg: () -> Any?) = run { if (isEnabled(level)) actualLog(level, msg()) }
+
+    /** Traces the lazily executed [msg] if the [Logger.level] is at least [Level.FATAL] */
     inline fun fatal(msg: () -> Any?) = log(Level.FATAL, msg)
+    /** Traces the lazily executed [msg] if the [Logger.level] is at least [Level.ERROR] */
     inline fun error(msg: () -> Any?) = log(Level.ERROR, msg)
+    /** Traces the lazily executed [msg] if the [Logger.level] is at least [Level.WARN] */
     inline fun warn(msg: () -> Any?) = log(Level.WARN, msg)
+    /** Traces the lazily executed [msg] if the [Logger.level] is at least [Level.INFO] */
     inline fun info(msg: () -> Any?) = log(Level.INFO, msg)
+    /** Traces the lazily executed [msg] if the [Logger.level] is at least [Level.DEBUG] */
     inline fun debug(msg: () -> Any?) = log(Level.DEBUG, msg)
+    /** Traces the lazily executed [msg] if the [Logger.level] is at least [Level.TRACE] */
     inline fun trace(msg: () -> Any?) = log(Level.TRACE, msg)
 
-    @Deprecated("Potential performance problem. Use inline to lazily compute message.", ReplaceWith("fatal { msg }"))
+    @Deprecated("Potential performance problem. Use inline to lazily compute the message.", ReplaceWith("fatal { msg }"))
     fun fatal(msg: String) = fatal { msg }
-
-    @Deprecated("potential performance problem. Use inline to lazily compute message.", ReplaceWith("error { msg }"))
+    @Deprecated("potential performance problem. Use inline to lazily compute the message.", ReplaceWith("error { msg }"))
     fun error(msg: String) = error { msg }
-
-    @Deprecated("potential performance problem. Use inline to lazily compute message.", ReplaceWith("warn { msg }"))
+    @Deprecated("potential performance problem. Use inline to lazily compute the message.", ReplaceWith("warn { msg }"))
     fun warn(msg: String) = warn { msg }
-
-    @Deprecated("potential performance problem. Use inline to lazily compute message.", ReplaceWith("info { msg }"))
+    @Deprecated("potential performance problem. Use inline to lazily compute the message.", ReplaceWith("info { msg }"))
     fun info(msg: String) = info { msg }
-
-    @Deprecated("potential performance problem. Use inline to lazily compute message.", ReplaceWith("debug { msg }"))
+    @Deprecated("potential performance problem. Use inline to lazily compute the message.", ReplaceWith("debug { msg }"))
     fun debug(msg: String) = debug { msg }
-
-    @Deprecated("potential performance problem. Use inline to lazily compute message.", ReplaceWith("trace { msg }"))
+    @Deprecated("potential performance problem. Use inline to lazily compute the message.", ReplaceWith("trace { msg }"))
     fun trace(msg: String) = trace { msg }
 
-    fun isEnabled(level: Level) = level.index <= processedLevel.index
-
-    inline val isFatalEnabled get() = isEnabled(Level.FATAL)
-    inline val isErrorEnabled get() = isEnabled(Level.ERROR)
-    inline val isWarnEnabled get() = isEnabled(Level.WARN)
-    inline val isInfoEnabled get() = isEnabled(Level.INFO)
-    inline val isDebugEnabled get() = isEnabled(Level.DEBUG)
-    inline val isTraceEnabled get() = isEnabled(Level.TRACE)
+    @PublishedApi
+    internal fun actualLog(level: Level, msg: Any?) = run { output.output(this, level, msg) }
 }
 
-internal expect val isNative: Boolean
-
-internal inline operator fun <T> AtomicRef<T>.getValue(obj: Any, property: KProperty<Any?>): T = this.value
-internal inline operator fun <T> AtomicRef<T>.setValue(obj: Any, property: KProperty<Any?>, value: T) = run { this.value = value }
-
-internal inline operator fun AtomicBoolean.getValue(obj: Any, property: KProperty<Any?>): Boolean = this.value
-internal inline operator fun AtomicBoolean.setValue(obj: Any, property: KProperty<Any?>, value: Boolean) = run { this.value = value }
-
-internal inline operator fun AtomicInt.getValue(obj: Any, property: KProperty<Any?>): Int = this.value
-internal inline operator fun AtomicInt.setValue(obj: Any, property: KProperty<Any?>, value: Int) = run { this.value = value }
-
-internal inline operator fun AtomicLong.getValue(obj: Any, property: KProperty<Any?>): Long = this.value
-internal inline operator fun AtomicLong.setValue(obj: Any, property: KProperty<Any?>, value: Long) = run { this.value = value }

@@ -1,6 +1,7 @@
 package com.soywiz.klogger.test
 
 import com.soywiz.klogger.*
+import com.soywiz.klogger.internal.*
 import kotlinx.atomicfu.*
 import kotlin.test.*
 
@@ -22,6 +23,7 @@ class LoggerTest {
 		logger.info { "myinfo" }
 		logger.trace { "mytrace" }
 		assertEquals(listOf("demo: WARN: mywarn", "demo: INFO: myinfo"), out)
+
 		logger.level = Logger.Level.WARN
 		logger.warn { "mywarn" }
 		logger.info { "myinfo" }
