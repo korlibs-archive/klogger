@@ -1,5 +1,5 @@
 plugins {
-    id 'kotlin-multiplatform' version '1.3.0'
+    id 'kotlin-multiplatform' version '1.3.11'
     id 'com.moowork.node' version '1.2.0'
 }
 
@@ -28,7 +28,7 @@ kotlin {
                 }
                 compileTestKotlinJs.kotlinOptions {
                     languageVersion = "1.3"
-                    moduleKind = "commonjs"
+                    moduleKind = "umd"
                 }
             }
         }
@@ -54,16 +54,6 @@ kotlin {
 }
 
 dependencies {
-    commonMainImplementation "org.jetbrains.kotlinx:atomicfu-common:$atomixfuVersion"
-    jvmMainImplementation "org.jetbrains.kotlinx:atomicfu:$atomixfuVersion"
-    jsMainImplementation "org.jetbrains.kotlinx:atomicfu-js:$atomixfuVersion"
-    linuxX64MainImplementation "org.jetbrains.kotlinx:atomicfu-native_debug_linux_x64:$atomixfuVersion"
-    mingwX64MainImplementation "org.jetbrains.kotlinx:atomicfu-native_debug_mingw_x64:$atomixfuVersion"
-    macosX64MainImplementation "org.jetbrains.kotlinx:atomicfu-native_debug_macos_x64:$atomixfuVersion"
-    iosX64MainImplementation "org.jetbrains.kotlinx:atomicfu-native_debug_ios_x64:$atomixfuVersion"
-    iosArm32MainImplementation "org.jetbrains.kotlinx:atomicfu-native_debug_ios_arm32:$atomixfuVersion"
-    iosArm64MainImplementation "org.jetbrains.kotlinx:atomicfu-native_debug_ios_arm64:$atomixfuVersion"
-
     commonMainImplementation "org.jetbrains.kotlin:kotlin-stdlib-common"
     commonTestImplementation "org.jetbrains.kotlin:kotlin-test-annotations-common"
     commonTestImplementation "org.jetbrains.kotlin:kotlin-test-common"
@@ -130,12 +120,12 @@ apply plugin: 'maven-publish'
 def pomBaseData = {
     licenses {
         license {
-            name "MIT License"
-            url "https://raw.githubusercontent.com/korlibs/klogger/master/LICENSE"
+            name project.property("project.license.name")
+            url project.property("project.license.url")
         }
     }
     scm {
-        url "https://github.com/korlibs/klogger"
+        url project.property("project.scm.url")
     }
 }
 
@@ -143,8 +133,8 @@ def generatePom = { pom ->
     pom.withXml {
         def root = it.asNode()
         root.appendNode('name', project.name)
-        root.appendNode('description', 'Consistent and portable date and time utilities for multiplatform kotlin (JVM, JS, Native and COMMON)')
-        root.appendNode('url', 'https://github.com/korlibs/klogger')
+        root.appendNode('description', project.property("project.description"))
+        root.appendNode('url', project.property("project.scm.url"))
         root.children().last() + pomBaseData
     }
 }
@@ -171,4 +161,8 @@ if (publishUser && publishPassword) {
             generatePom(pom)
         }
     }
+}
+
+if (project.file('build.project.gradle').exists()) {
+    apply from: project.file('build.project.gradle')
 }
