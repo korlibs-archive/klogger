@@ -1,21 +1,19 @@
 package com.soywiz.klogger
 
-import com.soywiz.klogger.internal.*
-import kotlinx.atomicfu.*
+private var Logger_loggers: Map<String, Logger> = mapOf()
+private var Logger_defaultLevel: Logger.Level? = null
+private var Logger_defaultOutput: Logger.Output = Logger.ConsoleLogOutput
 
 /**
  * Utility to log messages.
  */
 class Logger private constructor(val name: String, val dummy: Boolean) {
     init {
-        // @TODO: kotlin-native this produces a freeze error
-        if (!isNative) {
-            Logger.loggers += mapOf(name to this)
-        }
+        Logger_loggers += mapOf(name to this)
     }
 
-    private var _level: Level? by atomic<Level?>(null)
-    private var _output: Output? by atomic<Output?>(null)
+    private var _level: Level? = null
+    private var _output: Output? = null
 
     /** [Level] of this [Logger]. If not set, it will use the [Logger.defaultLevel] */
     var level: Level
@@ -34,15 +32,17 @@ class Logger private constructor(val name: String, val dummy: Boolean) {
     val isLocalOutputSet: Boolean get() = _output != null
 
     companion object {
-        private var loggers: Map<String, Logger> by atomic(mapOf())
-
         /** The default [Level] used for all [Logger] that doesn't have its [Logger.level] set */
-        var defaultLevel: Level? by atomic<Level?>(null)
+        var defaultLevel: Level?
+            get() = Logger_defaultLevel
+            set(value) = run { Logger_defaultLevel = value }
         /** The default [Output] used for all [Logger] that doesn't have its [Logger.output] set */
-        var defaultOutput: Output by atomic<Output>(ConsoleLogOutput)
+        var defaultOutput: Output
+            get() = Logger_defaultOutput
+            set(value) = run { Logger_defaultOutput = value }
 
         /** Gets a [Logger] from its [name] */
-        operator fun invoke(name: String) = loggers[name] ?: Logger(name, true)
+        operator fun invoke(name: String) = Logger_loggers[name] ?: Logger(name, true)
     }
 
     /** Logging [Level] */

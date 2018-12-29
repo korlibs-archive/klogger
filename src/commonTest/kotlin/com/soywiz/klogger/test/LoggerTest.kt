@@ -1,12 +1,10 @@
 package com.soywiz.klogger.test
 
 import com.soywiz.klogger.*
-import com.soywiz.klogger.internal.*
-import kotlinx.atomicfu.*
 import kotlin.test.*
 
 class LoggerTest {
-	var out by atomic(listOf<String>())
+	var out = listOf<String>()
 
 	@Test
 	fun simple() {

@@ -1,11 +1,2 @@
 dependencies {
-    commonMainImplementation "org.jetbrains.kotlinx:atomicfu-common:$atomixfuVersion"
-    jvmMainImplementation "org.jetbrains.kotlinx:atomicfu:$atomixfuVersion"
-    jsMainImplementation "org.jetbrains.kotlinx:atomicfu-js:$atomixfuVersion"
-    linuxX64MainImplementation "org.jetbrains.kotlinx:atomicfu-native_debug_linux_x64:$atomixfuVersion"
-    mingwX64MainImplementation "org.jetbrains.kotlinx:atomicfu-native_debug_mingw_x64:$atomixfuVersion"
-    macosX64MainImplementation "org.jetbrains.kotlinx:atomicfu-native_debug_macos_x64:$atomixfuVersion"
-    iosX64MainImplementation "org.jetbrains.kotlinx:atomicfu-native_debug_ios_x64:$atomixfuVersion"
-    iosArm32MainImplementation "org.jetbrains.kotlinx:atomicfu-native_debug_ios_arm32:$atomixfuVersion"
-    iosArm64MainImplementation "org.jetbrains.kotlinx:atomicfu-native_debug_ios_arm64:$atomixfuVersion"
 }
