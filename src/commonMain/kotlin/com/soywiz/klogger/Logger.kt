@@ -1,35 +1,37 @@
 package com.soywiz.klogger
 
-private var Logger_loggers: Map<String, Logger> = mapOf()
+private var Logger_loggers: LinkedHashMap<String, Logger> = LinkedHashMap()
 private var Logger_defaultLevel: Logger.Level? = null
 private var Logger_defaultOutput: Logger.Output = Logger.ConsoleLogOutput
+
+private var Logger_levels: LinkedHashMap<String, Logger.Level?> = LinkedHashMap()
+private var Logger_outputs: LinkedHashMap<String, Logger.Output?> = LinkedHashMap()
 
 /**
  * Utility to log messages.
  */
 class Logger private constructor(val name: String, val dummy: Boolean) {
     init {
-        Logger_loggers += mapOf(name to this)
+        Logger_loggers[name] = this
+        Logger_levels[name] = null
+        Logger_outputs[name] = null
     }
-
-    private var _level: Level? = null
-    private var _output: Output? = null
 
     /** [Level] of this [Logger]. If not set, it will use the [Logger.defaultLevel] */
     var level: Level
-        set(value) = run { _level = value }
-        get() = _level ?: Logger.defaultLevel ?: Level.WARN
+        set(value) = run { Logger_levels[name] = value }
+        get() = Logger_levels[name] ?: Logger.defaultLevel ?: Level.WARN
 
     /** [Output] of this [Logger]. If not set, it will use the [Logger.defaultOutput] */
     var output: Output
-        set(value) = run { _output = value }
-        get() = _output ?: Logger.defaultOutput
+        set(value) = run { Logger_outputs[name] = value }
+        get() = Logger_outputs[name] ?: Logger.defaultOutput
 
     /** Check if the [level] is set for this [Logger] */
-    val isLocalLevelSet: Boolean get() = _level != null
+    val isLocalLevelSet: Boolean get() = Logger_levels[name] != null
 
     /** Check if the [output] is set for this [Logger] */
-    val isLocalOutputSet: Boolean get() = _output != null
+    val isLocalOutputSet: Boolean get() = Logger_outputs[name] != null
 
     companion object {
         /** The default [Level] used for all [Logger] that doesn't have its [Logger.level] set */
@@ -87,28 +89,50 @@ class Logger private constructor(val name: String, val dummy: Boolean) {
 
     /** Traces the lazily executed [msg] if the [Logger.level] is at least [Level.FATAL] */
     inline fun fatal(msg: () -> Any?) = log(Level.FATAL, msg)
+
     /** Traces the lazily executed [msg] if the [Logger.level] is at least [Level.ERROR] */
     inline fun error(msg: () -> Any?) = log(Level.ERROR, msg)
+
     /** Traces the lazily executed [msg] if the [Logger.level] is at least [Level.WARN] */
     inline fun warn(msg: () -> Any?) = log(Level.WARN, msg)
+
     /** Traces the lazily executed [msg] if the [Logger.level] is at least [Level.INFO] */
     inline fun info(msg: () -> Any?) = log(Level.INFO, msg)
+
     /** Traces the lazily executed [msg] if the [Logger.level] is at least [Level.DEBUG] */
     inline fun debug(msg: () -> Any?) = log(Level.DEBUG, msg)
+
     /** Traces the lazily executed [msg] if the [Logger.level] is at least [Level.TRACE] */
     inline fun trace(msg: () -> Any?) = log(Level.TRACE, msg)
 
-    @Deprecated("Potential performance problem. Use inline to lazily compute the message.", ReplaceWith("fatal { msg }"))
+    @Deprecated(
+        "Potential performance problem. Use inline to lazily compute the message.",
+        ReplaceWith("fatal { msg }")
+    )
     fun fatal(msg: String) = fatal { msg }
-    @Deprecated("potential performance problem. Use inline to lazily compute the message.", ReplaceWith("error { msg }"))
+
+    @Deprecated(
+        "potential performance problem. Use inline to lazily compute the message.",
+        ReplaceWith("error { msg }")
+    )
     fun error(msg: String) = error { msg }
+
     @Deprecated("potential performance problem. Use inline to lazily compute the message.", ReplaceWith("warn { msg }"))
     fun warn(msg: String) = warn { msg }
+
     @Deprecated("potential performance problem. Use inline to lazily compute the message.", ReplaceWith("info { msg }"))
     fun info(msg: String) = info { msg }
-    @Deprecated("potential performance problem. Use inline to lazily compute the message.", ReplaceWith("debug { msg }"))
+
+    @Deprecated(
+        "potential performance problem. Use inline to lazily compute the message.",
+        ReplaceWith("debug { msg }")
+    )
     fun debug(msg: String) = debug { msg }
-    @Deprecated("potential performance problem. Use inline to lazily compute the message.", ReplaceWith("trace { msg }"))
+
+    @Deprecated(
+        "potential performance problem. Use inline to lazily compute the message.",
+        ReplaceWith("trace { msg }")
+    )
     fun trace(msg: String) = trace { msg }
 
     @PublishedApi
@@ -117,5 +141,6 @@ class Logger private constructor(val name: String, val dummy: Boolean) {
 
 /** Sets the [Logger.level] */
 fun Logger.setLevel(level: Logger.Level): Logger = this.apply { this.level = level }
+
 /** Sets the [Logger.output] */
 fun Logger.setOutput(output: Logger.Output): Logger = this.apply { this.output = output }
