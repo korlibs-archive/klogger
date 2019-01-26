@@ -109,10 +109,10 @@ subprojects {
 			nativePosixMain
 			if (hasAndroid) {
 				androidMain {
-					dependsOn jvmMain
+					//dependsOn jvmMain
 				}
 				androidTest {
-					dependsOn jvmTest
+					//dependsOn jvmTest
 				}
 			}
 			mingwX64Main {
@@ -314,9 +314,22 @@ subprojects {
 				}
 			}
 
-			configure(publications) {
-				generatePom(pom)
-			}
+            afterEvaluate {
+                configure(publications) {
+                    //println(pom.packaging)
+                    generatePom(pom)
+                    if (pom.packaging == 'aar') {
+                        pom.withXml {
+                            Node root = it.asNode()
+                            NodeList scope = root.dependencies.dependency.scope
+                            for (Node node in scope.asList()) {
+                                node.setValue("compile")
+                                //println(node)
+                            }
+                        }
+                    }
+                }
+            }
 		}
 	}
 }

@@ -2,7 +2,7 @@ package com.soywiz.klogger
 
 private var Logger_loggers: LinkedHashMap<String, Logger> = LinkedHashMap()
 private var Logger_defaultLevel: Logger.Level? = null
-private var Logger_defaultOutput: Logger.Output = Logger.ConsoleLogOutput
+private var Logger_defaultOutput: Logger.Output = DefaultLogOutput
 
 private var Logger_levels: LinkedHashMap<String, Logger.Level?> = LinkedHashMap()
 private var Logger_outputs: LinkedHashMap<String, Logger.Output?> = LinkedHashMap()
