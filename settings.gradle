@@ -1,25 +1,12 @@
-pluginManagement {
-	resolutionStrategy {
-		eachPlugin {
-			if (requested.id.id == "kotlin-multiplatform") {
-				useModule("org.jetbrains.kotlin:kotlin-gradle-plugin:${requested.version}")
-			}
-		}
-	}
+rootProject.name = rootDir.name + "-root"
 
-	repositories {
-		mavenLocal()
-		mavenCentral()
-		maven { url 'https://plugins.gradle.org/m2/' }
-	}
+for (file in rootDir.listFiles()) {
+    if (file.name == "build" || file.name == "buildSrc" || file.name.startsWith(".")) continue
+    if (
+		["build.gradle", "build.gradle.kts"].collect { new File(file, it) }.any { it.exists() } &&
+		["settings.gradle", "settings.gradle.kts"].collect { new File(file, it) }.every { !it.exists() }
+	) {
+        include(":${file.name}")
+    }
 }
 
-enableFeaturePreview('GRADLE_METADATA')
-
-rootProject.name = (new File(rootProject.projectDir, 'gradle.properties')).withInputStream {
-	Properties properties = new Properties()
-	properties.load(it)
-	properties
-}.getProperty("project.name")
-
-include ':klogger'
