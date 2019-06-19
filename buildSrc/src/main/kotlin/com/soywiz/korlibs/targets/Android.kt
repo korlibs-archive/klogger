@@ -7,10 +7,10 @@ fun Project.configureTargetAndroid() {
     if (korlibs.hasAndroid) {
         plugins.apply("com.android.library")
         extensions.getByType(com.android.build.gradle.LibraryExtension::class.java).apply {
-            compileSdkVersion(28)
+            compileSdkVersion(29)
             defaultConfig {
                 it.minSdkVersion(18)
-                it.targetSdkVersion(28)
+                it.targetSdkVersion(29)
             }
         }
 
