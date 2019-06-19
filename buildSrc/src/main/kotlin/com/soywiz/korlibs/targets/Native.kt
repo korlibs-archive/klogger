@@ -1,10 +1,10 @@
 package com.soywiz.korlibs.targets
 
-import com.soywiz.korlibs.*
-import org.apache.tools.ant.taskdefs.condition.*
-import org.gradle.api.*
-import org.gradle.api.tasks.*
-import java.io.*
+import com.soywiz.korlibs.gkotlin
+import com.soywiz.korlibs.hasAndroid
+import com.soywiz.korlibs.tasks
+import org.apache.tools.ant.taskdefs.condition.Os
+import org.gradle.api.Project
 
 fun Project.configureTargetNative() {
     gkotlin.apply {
@@ -58,35 +58,9 @@ fun Project.configureTargetNative() {
 
     afterEvaluate {
         for (target in listOf("macosX64", "linuxX64", "mingwX64")) {
-            val taskName = "copyResourcesToExecutable_$target"
-            val targetTestTask = tasks.getByName("${target}Test") as Exec
-            val compileTestTask = tasks.getByName("compileTestKotlin${target.capitalize()}")
-            val compileMainask = tasks.getByName("compileKotlin${target.capitalize()}")
-
             tasks {
-                create<Copy>(taskName) {
-                    for (sourceSet in gkotlin.sourceSets) {
-                        from(sourceSet.resources)
-                    }
-
-                    into(File(targetTestTask.executable).parentFile)
-                }
+                tasks.getByName("${target}Test")
             }
-
-            val reportFile = buildDir["test-results/nativeTest/text/output.txt"].apply { parentFile.mkdirs() }
-            val fout = ByteArrayOutputStream()
-            targetTestTask.standardOutput = MultiOutputStream(listOf(targetTestTask.standardOutput, fout))
-            targetTestTask.doLast {
-                reportFile.writeBytes(fout.toByteArray())
-            }
-
-            targetTestTask.inputs.files(
-                *compileTestTask.outputs.files.files.toTypedArray(),
-                *compileMainask.outputs.files.files.toTypedArray()
-            )
-            targetTestTask.outputs.file(reportFile)
-
-            targetTestTask.dependsOn(taskName)
         }
     }
 }

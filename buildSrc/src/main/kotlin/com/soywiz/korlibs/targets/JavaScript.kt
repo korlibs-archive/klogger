@@ -146,7 +146,7 @@ fun Project.configureTargetJavaScript() {
 
     // Include resources from JS and Metadata (common) into the JS JAR
     val jsJar = tasks.getByName("jsJar") as Jar
-    val jsTest = tasks.getByName("jsTest") as Test
+    val jsTest = tasks.getByName("jsTest")
 
     for (target in listOf(kotlin.targets.js, kotlin.targets.metadata)) {
         //for (target in listOf(kotlin.targets.js)) {
