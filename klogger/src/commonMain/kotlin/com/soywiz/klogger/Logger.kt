@@ -38,6 +38,7 @@ class Logger private constructor(val name: String, val dummy: Boolean) {
         var defaultLevel: Level?
             get() = Logger_defaultLevel
             set(value) = run { Logger_defaultLevel = value }
+
         /** The default [Output] used for all [Logger] that doesn't have its [Logger.output] set */
         var defaultOutput: Output
             get() = Logger_defaultOutput
@@ -45,6 +46,9 @@ class Logger private constructor(val name: String, val dummy: Boolean) {
 
         /** Gets a [Logger] from its [name] */
         operator fun invoke(name: String) = Logger_loggers[name] ?: Logger(name, true)
+
+        /** Gets a [Logger] from its [KClass.simpleName] */
+        inline operator fun <reified T : Any> invoke() = invoke(T::class.simpleName ?: "NoClassName")
     }
 
     /** Logging [Level] */
@@ -73,14 +77,19 @@ class Logger private constructor(val name: String, val dummy: Boolean) {
 
     /** Returns if this [Logger] has at least level [Level.FATAL] */
     inline val isFatalEnabled get() = isEnabled(Level.FATAL)
+
     /** Returns if this [Logger] has at least level [Level.ERROR] */
     inline val isErrorEnabled get() = isEnabled(Level.ERROR)
+
     /** Returns if this [Logger] has at least level [Level.WARN] */
     inline val isWarnEnabled get() = isEnabled(Level.WARN)
+
     /** Returns if this [Logger] has at least level [Level.INFO] */
     inline val isInfoEnabled get() = isEnabled(Level.INFO)
+
     /** Returns if this [Logger] has at least level [Level.DEBUG] */
     inline val isDebugEnabled get() = isEnabled(Level.DEBUG)
+
     /** Returns if this [Logger] has at least level [Level.TRACE] */
     inline val isTraceEnabled get() = isEnabled(Level.TRACE)
 
