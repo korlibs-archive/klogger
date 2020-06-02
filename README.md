@@ -16,4 +16,4 @@ in addition to ensure the continuity of the project, you will get exclusive cont
 </p>
 <!-- /SUPPORT -->
 
-<https://bintray.com/soywiz/soywiz/klogger>
+<https://bintray.com/korlibs/korlibs/klogger>
