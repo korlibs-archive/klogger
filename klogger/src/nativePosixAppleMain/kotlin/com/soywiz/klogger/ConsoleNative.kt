@@ -1,7 +1,9 @@
 package com.soywiz.klogger
 
+import platform.Foundation.NSLog
+
 actual inline fun Console.log(vararg msg: Any?) {
-    println(msg.joinToString(", "))
+    NSLog("%s", msg.joinToString(", "))
 }
 
 actual inline fun Console.warn(vararg msg: Any?) {
